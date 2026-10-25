@@ -1,0 +1,348 @@
+//@version=6
+// ══════════════════════════════════════════════════════════════════════════════
+//  CRT
+//
+//  Author   : Meta Program Labs
+//  GitHub   : https://github.com/Metaprogramlabs
+//  Telegram : https://t.me/Metaprogramlabs
+//
+//  © 2026 Meta Program Labs. All rights reserved.
+//
+//  The source code is published for viewing and for personal, non-commercial
+//  use on your own TradingView account only. Copying, modification,
+//  redistribution, republishing (including on TradingView or any other
+//  platform) and commercial use are prohibited without prior written
+//  permission of the author. See the LICENSE file in the repository.
+// ══════════════════════════════════════════════════════════════════════════════
+indicator('CRT', overlay = true, max_lines_count = 500, max_labels_count = 500, max_bars_back = 4000)
+
+// Explicitly set max_bars_back for key variables
+max_bars_back(time, 4000)
+max_bars_back(high, 4000)
+max_bars_back(low, 4000)
+max_bars_back(close, 4000)
+max_bars_back(open, 4000)
+
+// Converts a timeframe string into a label text
+convertTimeFrameLabel(tfString) =>
+    switch tfString
+        '60' => 'H1'
+        '240' => 'H4'
+        '360' => 'H6'
+        'D' => 'D1'
+        'W' => 'W1'
+        '1M' => '1M'
+        '3M' => '3M'
+        '6M' => '6M'
+        '12M' => '12M'
+        => ''
+
+// ══ Menu inputs: every timeframe has its own group ══════════════════════════════
+
+g_tf1 = 'H1 Range ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+g_tf2 = 'H4 Range ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+g_tf3 = 'H6 Range ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+g_tf4 = 'D1 Range ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+g_tf5 = 'W1 Range ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+g_tf6 = '1M Range ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+g_tf7 = '3M Range ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+g_tf8 = '6M Range ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+g_tf9 = '12M Range ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+
+// Line style names -> Pine line styles
+f_style(s) =>
+    s == 'Dotted' ? line.style_dotted : s == 'Dashed' ? line.style_dashed : line.style_solid
+
+// Label settings (fixed)
+show_eol_labels = true
+label_position = 'Left'
+show_hl_text = true
+label_size = size.tiny
+
+// H1
+use_tf1   = input.bool(false, 'Show', inline = 'a1', group = g_tf1)
+tf1_color = input.color(color.rgb(4, 0, 255), '', inline = 'a1', group = g_tf1)
+tf1_width = input.int(1, 'Width', minval = 1, maxval = 4, inline = 'b1', group = g_tf1)
+tf1_style = input.string('Solid', 'Style', options = ['Solid', 'Dotted', 'Dashed'], inline = 'b1', group = g_tf1)
+
+// H4
+use_tf2   = input.bool(false, 'Show', inline = 'a2', group = g_tf2)
+tf2_color = input.color(#045302, '', inline = 'a2', group = g_tf2)
+tf2_width = input.int(1, 'Width', minval = 1, maxval = 4, inline = 'b2', group = g_tf2)
+tf2_style = input.string('Solid', 'Style', options = ['Solid', 'Dotted', 'Dashed'], inline = 'b2', group = g_tf2)
+
+// H6
+use_tf3   = input.bool(true, 'Show', inline = 'a3', group = g_tf3)
+tf3_color = input.color(#006d21, '', inline = 'a3', group = g_tf3)
+tf3_width = input.int(1, 'Width', minval = 1, maxval = 4, inline = 'b3', group = g_tf3)
+tf3_style = input.string('Solid', 'Style', options = ['Solid', 'Dotted', 'Dashed'], inline = 'b3', group = g_tf3)
+
+// D1
+use_tf4   = input.bool(true, 'Show', inline = 'a4', group = g_tf4)
+tf4_color = input.color(#000000, '', inline = 'a4', group = g_tf4)
+tf4_width = input.int(1, 'Width', minval = 1, maxval = 4, inline = 'b4', group = g_tf4)
+tf4_style = input.string('Solid', 'Style', options = ['Solid', 'Dotted', 'Dashed'], inline = 'b4', group = g_tf4)
+
+// W1
+use_tf5   = input.bool(true, 'Show', inline = 'a5', group = g_tf5)
+tf5_color = input.color(#fc0303, '', inline = 'a5', group = g_tf5)
+tf5_width = input.int(1, 'Width', minval = 1, maxval = 4, inline = 'b5', group = g_tf5)
+tf5_style = input.string('Solid', 'Style', options = ['Solid', 'Dotted', 'Dashed'], inline = 'b5', group = g_tf5)
+
+// 1M
+use_tf6   = input.bool(false, 'Show', inline = 'a6', group = g_tf6)
+tf6_color = input.color(#e6a10d, '', inline = 'a6', group = g_tf6)
+tf6_width = input.int(1, 'Width', minval = 1, maxval = 4, inline = 'b6', group = g_tf6)
+tf6_style = input.string('Solid', 'Style', options = ['Solid', 'Dotted', 'Dashed'], inline = 'b6', group = g_tf6)
+
+// 3M
+use_tf7   = input.bool(false, 'Show', inline = 'a7', group = g_tf7)
+tf7_color = input.color(#e60dd1, '', inline = 'a7', group = g_tf7)
+tf7_width = input.int(1, 'Width', minval = 1, maxval = 4, inline = 'b7', group = g_tf7)
+tf7_style = input.string('Solid', 'Style', options = ['Solid', 'Dotted', 'Dashed'], inline = 'b7', group = g_tf7)
+
+// 6M
+use_tf8   = input.bool(false, 'Show', inline = 'a8', group = g_tf8)
+tf8_color = input.color(#0dd1e6, '', inline = 'a8', group = g_tf8)
+tf8_width = input.int(1, 'Width', minval = 1, maxval = 4, inline = 'b8', group = g_tf8)
+tf8_style = input.string('Solid', 'Style', options = ['Solid', 'Dotted', 'Dashed'], inline = 'b8', group = g_tf8)
+
+// 12M
+use_tf9   = input.bool(false, 'Show', inline = 'a9', group = g_tf9)
+tf9_color = input.color(#d1e60d, '', inline = 'a9', group = g_tf9)
+tf9_width = input.int(1, 'Width', minval = 1, maxval = 4, inline = 'b9', group = g_tf9)
+tf9_style = input.string('Solid', 'Style', options = ['Solid', 'Dotted', 'Dashed'], inline = 'b9', group = g_tf9)
+
+eol_label_offset = 1
+
+
+tf1 = '60' 
+tf2 = '240' 
+tf3 = '360'
+tf4 = 'D' 
+tf5 = 'W' 
+tf6 = '1M' 
+tf7 = '3M' 
+tf8 = '6M' 
+tf9 = '12M' 
+
+// Function for processing data for a specified period of time
+process_tf(tf) =>
+    var float rangeHigh = na
+    var float rangeLow = na
+    var int rangeStart = 0
+    var bool inConsolidation = true
+    var bool bullishTouch = false
+    var bool bearishTouch = false
+    var bool justFormed = false
+    
+    
+    var float prevRangeHigh = na
+    var float prevRangeLow = na
+
+    
+    [tfOpen, tfHigh, tfLow, tfClose, tfTime] = request.security(syminfo.tickerid, tf, [open, high, low, close, time], barmerge.gaps_off, barmerge.lookahead_on)
+
+    
+    newBar = ta.change(tfTime) != 0
+    
+     
+    justFormed := false 
+
+    if newBar
+        
+        upControl = tfClose > rangeHigh and tfOpen > rangeHigh and bar_index - rangeStart > 1 and bar_index - rangeStart <= 250
+        downControl = tfClose < rangeLow and tfOpen < rangeLow and bar_index - rangeStart > 1 and bar_index - rangeStart <= 250
+
+        if upControl or downControl
+            inConsolidation := false
+
+        
+        hasValidRange = not na(rangeHigh) and not na(rangeLow)
+        isWithinRange = hasValidRange and inConsolidation and 
+                       tfOpen > tfClose ? (tfClose <= rangeHigh and tfClose >= rangeLow and tfOpen <= rangeHigh and tfOpen >= rangeLow) : (tfOpen <= rangeHigh and tfOpen >= rangeLow and tfClose <= rangeHigh and tfClose >= rangeLow)
+        
+        
+        if isWithinRange and bar_index > 1
+            
+            int a = 0  
+        else
+            
+            prevRangeHigh := rangeHigh
+            prevRangeLow := rangeLow
+            
+            
+            rangeHigh := tfHigh
+            rangeLow := tfLow
+            rangeStart := bar_index  
+            inConsolidation := true
+            justFormed := true  
+        
+        
+        if not inConsolidation and (bar_index - rangeStart > 250 or bar_index - rangeStart < 1)
+            
+            prevRangeHigh := rangeHigh
+            prevRangeLow := rangeLow
+            
+            
+            rangeHigh := tfHigh
+            rangeLow := tfLow
+            rangeStart := bar_index  
+            inConsolidation := true
+            justFormed := true  
+        
+        
+        bullishTouch := false
+        bearishTouch := false
+
+    
+    if inConsolidation and not na(rangeHigh) and not na(rangeLow)
+        bullishWickTouch = low < rangeLow and close > rangeLow and high < rangeHigh
+        bullishBodyTouch = open < rangeLow and close > rangeLow
+        bearishWickTouch = high > rangeHigh and close < rangeHigh and low > rangeLow
+        bearishBodyTouch = open > rangeHigh and close < rangeHigh
+
+        bullishTouch := bullishWickTouch or bullishBodyTouch
+        bearishTouch := bearishWickTouch or bearishBodyTouch
+
+    
+    [rangeHigh, rangeLow, rangeStart, inConsolidation, newBar, bullishTouch, bearishTouch, justFormed, prevRangeHigh, prevRangeLow]
+
+
+is_higher_tf_visible(tf) =>
+    tf_sec = request.security(syminfo.tickerid, tf, timeframe.in_seconds(timeframe.period))
+    timeframe.in_seconds(timeframe.period) <= tf_sec
+
+
+hide_tf1 = not is_higher_tf_visible(tf1)
+hide_tf2 = not is_higher_tf_visible(tf2)
+hide_tf3 = not is_higher_tf_visible(tf3)
+hide_tf4 = not is_higher_tf_visible(tf4)
+hide_tf5 = not is_higher_tf_visible(tf5)
+hide_tf6 = not is_higher_tf_visible(tf6)
+hide_tf7 = not is_higher_tf_visible(tf7)
+hide_tf8 = not is_higher_tf_visible(tf8)
+hide_tf9 = not is_higher_tf_visible(tf9)
+
+
+[high1, low1, start1, inRange1, newBar1, bullishTouch1, bearishTouch1, justFormed1, prevHigh1, prevLow1] = process_tf(tf1)
+[high2, low2, start2, inRange2, newBar2, bullishTouch2, bearishTouch2, justFormed2, prevHigh2, prevLow2] = process_tf(tf2)
+[high3, low3, start3, inRange3, newBar3, bullishTouch3, bearishTouch3, justFormed3, prevHigh3, prevLow3] = process_tf(tf3)
+[high4, low4, start4, inRange4, newBar4, bullishTouch4, bearishTouch4, justFormed4, prevHigh4, prevLow4] = process_tf(tf4)
+[high5, low5, start5, inRange5, newBar5, bullishTouch5, bearishTouch5, justFormed5, prevHigh5, prevLow5] = process_tf(tf5)
+[high6, low6, start6, inRange6, newBar6, bullishTouch6, bearishTouch6, justFormed6, prevHigh6, prevLow6] = process_tf(tf6)
+[high7, low7, start7, inRange7, newBar7, bullishTouch7, bearishTouch7, justFormed7, prevHigh7, prevLow7] = process_tf(tf7)
+[high8, low8, start8, inRange8, newBar8, bullishTouch8, bearishTouch8, justFormed8, prevHigh8, prevLow8] = process_tf(tf8)
+[high9, low9, start9, inRange9, newBar9, bullishTouch9, bearishTouch9, justFormed9, prevHigh9, prevLow9] = process_tf(tf9)
+
+
+plot_lines(tfColor, highValue, lowValue, start, inRange, newBar, justFormed, tfName, offset, lineWidth, lineStyle) =>
+    var line highLine = na
+    var line lowLine = na
+    var label highLabel = na
+    var label lowLabel = na
+    var int formationBar = na
+    var float highLineValue = na
+    var float lowLineValue = na
+    
+   
+    if justFormed and inRange
+        
+        if not na(highLine)
+            line.delete(highLine)
+        if not na(lowLine)
+            line.delete(lowLine)
+        if not na(highLabel)
+            label.delete(highLabel)
+        if not na(lowLabel)
+            label.delete(lowLabel)
+        
+        formationBar := bar_index
+        highLineValue := highValue
+        lowLineValue := lowValue
+        
+        highLine := line.new(x1=bar_index, y1=highValue, x2=bar_index, y2=highValue, color=tfColor, width=lineWidth, style=lineStyle)
+        lowLine := line.new(x1=bar_index, y1=lowValue, x2=bar_index, y2=lowValue, color=tfColor, width=lineWidth, style=lineStyle)
+        
+        if show_eol_labels
+            labelX = bar_index + offset
+            
+            highText = show_hl_text ? convertTimeFrameLabel(tfName) + ' H' : convertTimeFrameLabel(tfName)
+            lowText = show_hl_text ? convertTimeFrameLabel(tfName) + ' L' : convertTimeFrameLabel(tfName)
+            
+            labelStyle = label_position == 'Center' ? label.style_label_center : label_position == 'Left' ? label.style_label_left : label.style_label_right
+            
+            highLabel := label.new(x=labelX, y=highValue, text=highText, color=tfColor, textcolor=color.white, style=labelStyle, size=label_size)
+            lowLabel := label.new(x=labelX, y=lowValue, text=lowText, color=tfColor, textcolor=color.white, style=labelStyle, size=label_size)
+    
+    if not na(highLine) and inRange and not na(formationBar) and not na(highLineValue) and not na(lowLineValue)
+        line.set_x2(highLine, bar_index)
+        line.set_y2(highLine, highLineValue)
+        line.set_x2(lowLine, bar_index)
+        line.set_y2(lowLine, lowLineValue)
+        
+        if show_eol_labels
+            labelX = bar_index + offset  
+            
+            if not na(highLabel)
+                label.set_x(highLabel, labelX)
+                label.set_y(highLabel, highLineValue)
+            if not na(lowLabel)
+                label.set_x(lowLabel, labelX)
+                label.set_y(lowLabel, lowLineValue)
+
+
+if use_tf1 and not hide_tf1
+    plot_lines(tf1_color, high1, low1, start1, inRange1, newBar1, justFormed1, tf1, 3, tf1_width, f_style(tf1_style))
+
+if use_tf2 and not hide_tf2
+    plot_lines(tf2_color, high2, low2, start2, inRange2, newBar2, justFormed2, tf2, 3, tf2_width, f_style(tf2_style))
+
+if use_tf3 and not hide_tf3
+    plot_lines(tf3_color, high3, low3, start3, inRange3, newBar3, justFormed3, tf3, 3, tf3_width, f_style(tf3_style))
+
+if use_tf4 and not hide_tf4
+    plot_lines(tf4_color, high4, low4, start4, inRange4, newBar4, justFormed4, tf4, 3, tf4_width, f_style(tf4_style))
+
+if use_tf5 and not hide_tf5
+    plot_lines(tf5_color, high5, low5, start5, inRange5, newBar5, justFormed5, tf5, 3, tf5_width, f_style(tf5_style))
+
+if use_tf6 and not hide_tf6
+    plot_lines(tf6_color, high6, low6, start6, inRange6, newBar6, justFormed6, tf6, 3, tf6_width, f_style(tf6_style))
+
+if use_tf7 and not hide_tf7
+    plot_lines(tf7_color, high7, low7, start7, inRange7, newBar7, justFormed7, tf7, 3, tf7_width, f_style(tf7_style))
+
+if use_tf8 and not hide_tf8
+    plot_lines(tf8_color, high8, low8, start8, inRange8, newBar8, justFormed8, tf8, 3, tf8_width, f_style(tf8_style))
+
+if use_tf9 and not hide_tf9
+    plot_lines(tf9_color, high9, low9, start9, inRange9, newBar9, justFormed9, tf9, 3, tf9_width, f_style(tf9_style))
+
+// Alerts
+alertcondition(bullishTouch1, title = 'H1 Bullish Touch', message = 'Price touched H1 Low')
+alertcondition(bearishTouch1, title = 'H1 Bearish Touch', message = 'Price touched H1 High')
+
+alertcondition(bullishTouch2, title = 'H4 Bullish Touch', message = 'Price touched H4 Low')
+alertcondition(bearishTouch2, title = 'H4 Bearish Touch', message = 'Price touched H4 High')
+
+alertcondition(bullishTouch3, title = 'H6 Bullish Touch', message = 'Price touched H6 Low')
+alertcondition(bearishTouch3, title = 'H6 Bearish Touch', message = 'Price touched H6 High')
+
+alertcondition(bullishTouch4, title = 'D Bullish Touch', message = 'Price touched D Low')
+alertcondition(bearishTouch4, title = 'D Bearish Touch', message = 'Price touched D High')
+
+alertcondition(bullishTouch5, title = 'W Bullish Touch', message = 'Price touched W Low')
+alertcondition(bearishTouch5, title = 'W Bearish Touch', message = 'Price touched W High')
+
+alertcondition(bullishTouch6, title = '1M Bullish Touch', message = 'Price touched 1M Low')
+alertcondition(bearishTouch6, title = '1M Bearish Touch', message = 'Price touched 1M High')
+
+alertcondition(bullishTouch7, title = '3M Bullish Touch', message = 'Price touched 3M Low')
+alertcondition(bearishTouch7, title = '3M Bearish Touch', message = 'Price touched 3M High')
+
+alertcondition(bullishTouch8, title = '6M Bullish Touch', message = 'Price touched 6M Low')
+alertcondition(bearishTouch8, title = '6M Bearish Touch', message = 'Price touched 6M High')
+
+alertcondition(bullishTouch9, title = '12M Bullish Touch', message = 'Price touched 12M Low')
+alertcondition(bearishTouch9, title = '12M Bearish Touch', message = 'Price touched 12M High')
