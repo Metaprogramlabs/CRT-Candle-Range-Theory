@@ -20,6 +20,10 @@ Higher-timeframe candle range levels, configurable visuals, and alerts — devel
 
 ## 📸 Preview
 
+<div align="center">
+  <img src="docs/1.png" width="800" alt="CRT indicator displayed on a TradingView chart" />
+</div>
+
 ### More examples
 
 <div align="center">
